@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ApoTekno - Manajemen & Kasir Apotek</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #f1f5f9; color: #334155; display: flex; flex-direction: column; min-height: 100vh; }
+        
+        /* Header */
+        header { background-color: #047857; color: white; padding: 12px 20px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .nav-container { max-width: 1100px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+        .logo { display: flex; align-items: center; gap: 10px; font-weight: bold; font-size: 1.2rem; }
+        .logo-icon { background: white; color: #047857; padding: 6px; border-radius: 8px; display: flex; }
+        .nav-menu { display: flex; gap: 5px; overflow-x: auto; padding-bottom: 2px; }
+        .nav-btn { background: transparent; border: none; color: #d1fae5; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+        .nav-btn:hover, .nav-btn.active { background: #065f46; color: white; }
+
+        /* Main Area */
+        main { max-width: 1100px; width: 100%; margin: 20px auto; padding: 0 15px; flex-grow: 1; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* Dashboard Grid */
+        .page-title { margin-bottom: 15px; }
+        .page-title h2 { font-size: 1.4rem; color: #0f172a; }
+        .page-title p { font-size: 0.85rem; color: #64748b; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .stat-card { background: white; padding: 15px; border-radius: 10px; border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 12px; shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .stat-icon { width: 42px; height: 42px; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+        .bg-green { background: #dcfce7; color: #15803d; }
+        .bg-amber { background: #fef3c7; color: #b45309; }
+        .bg-blue { background: #dbeafe; color: #1d4ed8; }
+        .bg-teal { background: #ccfbf1; color: #0f766e; }
+        .stat-info p { font-size: 0.75rem; color: #64748b; font-weight: 600; }
+        .stat-info h3 { font-size: 1.2rem; color: #0f172a; }
+
+        /* Tables & Cards */
+        .card { background: white; border-radius: 10px; border: 1px solid #e2e8f0; padding: 15px; margin-bottom: 20px; }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #f1f5f9; font-weight: bold; font-size: 0.95rem; }
+        .table-responsive { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; text-align: left; }
+        th { background: #f8fafc; padding: 10px; color: #475569; border-bottom: 1px solid #e2e8f0; }
+        td { padding: 10px; border-bottom: 1px solid #f1f5f9; color: #334155; }
+        tr:hover { background-color: #f8fafc; }
+
+        /* Badges & Buttons */
+        .badge { padding: 3px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
+        .badge-cat { background: #e0f2fe; color: #0369a1; }
+        .badge-warning { background: #fee2e2; color: #b91c1c; }
+        .btn-primary { background: #047857; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; }
+        .btn-primary:hover { background: #065f46; }
+        .btn-danger { background: #ef4444; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; }
+        .btn-edit { background: #3b82f6; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; }
+        .btn-sm { padding: 4px 8px; font-size: 0.75rem; }
+
+        /* POS / Kasir Layout */
+        .pos-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
+        @media (min-width: 768px) { .pos-grid { grid-template-columns: 1.3fr 1fr; } }
+        .catalog-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; max-height: 450px; overflow-y: auto; padding-right: 5px; }
+        .catalog-item { background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; cursor: pointer; transition: 0.2s; display: flex; flex-direction: column; justify-content: space-between; }
+        .catalog-item:hover { border-color: #047857; transform: translateY(-2px); box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .catalog-item h4 { font-size: 0.8rem; margin: 5px 0; color: #0f172a; }
+        .catalog-item .price { font-weight: bold; color: #047857; font-size: 0.85rem; }
+
+        /* Form Inputs */
+        input, select { width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.85rem; outline: none; }
+        input:focus, select:focus { border-color: #047857; }
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; font-size: 0.75rem; font-weight: 600; color: #475569; margin-bottom: 4px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+        /* Cart */
+        .cart-list { max-height: 220px; overflow-y: auto; margin: 10px 0; border-top: 1px solid #f1f5f9; }
+        .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f1f5f9; font-size: 0.8rem; }
+        .qty-btn { width: 22px; height: 22px; background: #e2e8f0; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+
+        /* Modals */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; padding: 15px; }
+        .modal.active { display: flex; }
+        .modal-content { background: white; border-radius: 10px; max-width: 450px; width: 100%; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        .modal-header { background: #047857; color: white; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
+        .modal-body { padding: 15px; max-height: 80vh; overflow-y: auto; }
+        .close-btn { background: transparent; border: none; color: white; font-size: 1.2rem; cursor: pointer; }
+
+        /* Struk/Receipt */
+        .receipt { font-family: 'Courier New', Courier, monospace; font-size: 0.75rem; background: #fffbe8; padding: 12px; border: 1px dashed #cbd5e1; border-radius: 4px; margin-bottom: 12px; }
+        
+        @media print {
+            body * { visibility: hidden; }
+            #printable-receipt, #printable-receipt * { visibility: visible; }
+            #printable-receipt { position: absolute; left: 0; top: 0; width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header & Navigasi -->
+    <header>
+        <div class="nav-container">
+            <div class="logo">
+                <div class="logo-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 5v14M5 12h14"/></svg>
+                </div>
+                <div>
+                    <div>ApoTekno</div>
+                    <div style="font-size: 0.65rem; color: #a7f3d0; font-weight: normal;">Sistem Apotek & POS</div>
+                </div>
+            </div>
+            
+            <div class="nav-menu">
+                <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn active">Dashboard</button>
+                <button onclick="switchTab('inventory')" id="nav-inventory" class="nav-btn">Data Obat</button>
+                <button onclick="switchTab('pos')" id="nav-pos" class="nav-btn">Kasir / POS</button>
+                <button onclick="switchTab('history')" id="nav-history" class="nav-btn">Riwayat</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main>
+
+        <!-- TAB 1: DASHBOARD -->
+        <section id="tab-dashboard" class="tab-content active">
+            <div class="page-title">
+                <h2>Dashboard Ringkasan</h2>
+                <p id="current-date-display">Pantau statistik apotek hari ini.</p>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon bg-green">📦</div>
+                    <div class="stat-info"><p>TOTAL OBAT</p><h3 id="stat-total-medicines">0</h3></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon bg-amber">⚠️</div>
+                    <div class="stat-info"><p>STOK KRITIS (&le;10)</p><h3 id="stat-low-stock">0</h3></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon bg-blue">🛍️</div>
+                    <div class="stat-info"><p>TRANSAKSI HARI INI</p><h3 id="stat-today-tx">0</h3></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon bg-teal">💵</div>
+                    <div class="stat-info"><p>PENDAPATAN</p><h3 id="stat-today-revenue">Rp 0</h3></div>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px;">
+                <div class="card">
+                    <div class="card-header" style="color: #b45309;">⚠️ Stok Hampir Habis</div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead><tr><th>Nama Obat</th><th>Kategori</th><th style="text-align:right">Sisa</th></tr></thead>
+                            <tbody id="dashboard-low-stock-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header" style="color: #1d4ed8;">📋 Transaksi Terakhir</div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead><tr><th>ID Nota</th><th>Waktu</th><th style="text-align:right">Total</th></tr></thead>
+                            <tbody id="dashboard-recent-tx-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 2: INVENTORY -->
+        <section id="tab-inventory" class="tab-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+                <div class="page-title" style="margin:0;">
+                    <h2>Manajemen Stok Obat</h2>
+                    <p>Kelola data obat dan stok apotek.</p>
+                </div>
+                <button onclick="openMedicineModal()" class="btn-primary">+ Tambah Obat Baru</button>
+            </div>
+
+            <div class="card" style="padding: 10px; margin-bottom: 15px;">
+                <div class="form-row">
+                    <input type="text" id="inv-search" oninput="renderInventoryTable()" placeholder="🔍 Cari nama obat...">
+                    <select id="inv-filter-category" onchange="renderInventoryTable()">
+                        <option value="ALL">Semua Kategori</option>
+                        <option value="Obat Bebas">Obat Bebas</option>
+                        <option value="Obat Bebas Terbatas">Obat Bebas Terbatas</option>
+                        <option value="Obat Keras">Obat Keras</option>
+                        <option value="Vitamin & Suplemen">Vitamin & Suplemen</option>
+                        <option value="Alat Kesehatan">Alat Kesehatan</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="card" style="padding:0; overflow:hidden;">
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Nama Obat</th>
+                                <th>Kategori</th>
+                                <th>Harga</th>
+                                <th>Stok</th>
+                                <th>Tgl Expired</th>
+                                <th style="text-align:center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventory-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: POS / KASIR -->
+        <section id="tab-pos" class="tab-content">
+            <div class="pos-grid">
+                <div>
+                    <div class="card" style="padding:10px; margin-bottom:10px;">
+                        <input type="text" id="pos-search" oninput="renderPosCatalog()" placeholder="🔍 Cari obat di sini...">
+                    </div>
+                    <div class="catalog-grid" id="pos-catalog-grid"></div>
+                </div>
+
+                <div>
+                    <div class="card">
+                        <div class="card-header">
+                            <span>🛒 Keranjang Penjualan</span>
+                            <button onclick="clearCart()" style="background:none; border:none; color:#ef4444; font-size:0.75rem; cursor:pointer;">Kosongkan</button>
+                        </div>
+
+                        <div class="cart-list" id="cart-items-container"></div>
+
+                        <div style="background: #f8fafc; padding: 10px; border-radius: 8px; margin-top: 10px;">
+                            <div style="display:flex; justify-content:space-between; font-size:0.85rem; margin-bottom:5px;">
+                                <span>Subtotal:</span>
+                                <span id="cart-subtotal" style="font-weight:bold;">Rp 0</span>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; font-size:1rem; font-weight:bold; color:#047857; margin-bottom:10px; border-top:1px solid #e2e8f0; padding-top:5px;">
+                                <span>Total Tagihan:</span>
+                                <span id="cart-total">Rp 0</span>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Uang Pembayaran (Rp)</label>
+                                <input type="number" id="pay-amount" oninput="calculateChange()" placeholder="0" style="font-weight:bold; font-size:1rem;">
+                            </div>
+
+                            <div style="display:flex; justify-content:space-between; font-size:0.85rem; font-weight:bold; margin-bottom:12px;">
+                                <span>Kembalian:</span>
+                                <span id="pay-change">Rp 0</span>
+                            </div>
+
+                            <button onclick="processTransaction()" class="btn-primary" style="width:100%; justify-content:center; padding:10px;">Selesaikan Transaksi</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 4: HISTORY -->
+        <section id="tab-history" class="tab-content">
+            <div class="page-title">
+                <h2>Riwayat Penjualan</h2>
+                <p>Catatan transaksi yang pernah dilakukan.</p>
+            </div>
+
+            <div class="card" style="padding:0; overflow:hidden;">
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>No. Nota</th>
+                                <th>Tanggal & Waktu</th>
+                                <th>Item</th>
+                                <th>Total</th>
+                                <th>Bayar</th>
+                                <th>Kembali</th>
+                                <th style="text-align:center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="history-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MODAL TAMBAH/EDIT OBAT -->
+    <div id="medicine-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span id="modal-medicine-title">Tambah Obat Baru</span>
+                <button onclick="closeMedicineModal()" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="form-medicine" onsubmit="saveMedicine(event)">
+                    <input type="hidden" id="med-id">
+                    <div class="form-group">
+                        <label>Nama Obat / Alat</label>
+                        <input type="text" id="med-name" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Kategori</label>
+                            <select id="med-category" required>
+                                <option value="Obat Bebas">Obat Bebas</option>
+                                <option value="Obat Bebas Terbatas">Obat Bebas Terbatas</option>
+                                <option value="Obat Keras">Obat Keras</option>
+                                <option value="Vitamin & Suplemen">Vitamin & Suplemen</option>
+                                <option value="Alat Kesehatan">Alat Kesehatan</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Harga (Rp)</label>
+                            <input type="number" id="med-price" min="0" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Stok</label>
+                            <input type="number" id="med-stock" min="0" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Kedaluwarsa</label>
+                            <input type="date" id="med-expiry" required>
+                        </div>
+                    </div>
+                    <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:15px;">
+                        <button type="button" onclick="closeMedicineModal()" style="padding:8px 12px; background:#e2e8f0; border:none; border-radius:6px; cursor:pointer;">Batal</button>
+                        <button type="submit" class="btn-primary">Simpan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL STRUK/NOTA -->
+    <div id="receipt-modal" class="modal">
+        <div class="modal-content" style="max-width:320px;">
+            <div class="modal-body">
+                <div id="printable-receipt" class="receipt">
+                    <div style="text-align:center; border-bottom:1px dashed #cbd5e1; padding-bottom:5px; margin-bottom:5px;">
+                        <strong>APOTEK APOTEKNO</strong><br>
+                        <span style="font-size:0.65rem;">Jl. Kemerdekaan No. 45</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between;"><span>Nota:</span><span id="rec-id">#000</span></div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:5px;"><span>Tgl:</span><span id="rec-date">-</span></div>
+                    <div id="rec-items" style="border-top:1px dashed #cbd5e1; border-bottom:1px dashed #cbd5e1; padding:5px 0; margin:5px 0;"></div>
+                    <div style="display:flex; justify-content:space-between; font-weight:bold;"><span>Total:</span><span id="rec-total">Rp 0</span></div>
+                    <div style="display:flex; justify-content:space-between;"><span>Bayar:</span><span id="rec-pay">Rp 0</span></div>
+                    <div style="display:flex; justify-content:space-between;"><span>Kembali:</span><span id="rec-change">Rp 0</span></div>
+                    <div style="text-align:center; font-size:0.65rem; margin-top:8px;">Semoga Lekas Sembuh!</div>
+                </div>
+                <div style="display:flex; gap:5px;">
+                    <button onclick="window.print()" class="btn-primary" style="flex:1; justify-content:center;">Cetak Struk</button>
+                    <button onclick="closeReceiptModal()" style="padding:8px; background:#e2e8f0; border:none; border-radius:6px; cursor:pointer;">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LOGIKA JAVASCRIPT -->
+    <script>
+        const DEFAULT_MEDICINES = [
+            { id: "MED-1", name: "Paracetamol 500mg", category: "Obat Bebas", price: 10000, stock: 45, expiry: "2027-08-15" },
+            { id: "MED-2", name: "Amoxicillin 500mg", category: "Obat Keras", price: 22000, stock: 8, expiry: "2026-12-01" },
+            { id: "MED-3", name: "Vitamin C 1000mg", category: "Vitamin & Suplemen", price: 35000, stock: 25, expiry: "2028-01-20" },
+            { id: "MED-4", name: "OBH Batuk Sirup", category: "Obat Bebas Terbatas", price: 18500, stock: 5, expiry: "2026-10-10" },
+            { id: "MED-5", name: "Termometer Digital", category: "Alat Kesehatan", price: 45000, stock: 12, expiry: "2030-05-01" },
+            { id: "MED-6", name: "Ibuprofen 400mg", category: "Obat Bebas Terbatas", price: 14000, stock: 30, expiry: "2027-05-12" },
+            { id: "MED-7", name: "Antasida Doen (Maag)", category: "Obat Bebas", price: 8000, stock: 50, expiry: "2028-11-30" },
+            { id: "MED-8", name: "Cetirizine 10mg", category: "Obat Bebas Terbatas", price: 12500, stock: 20, expiry: "2027-03-14" },
+            { id: "MED-9", name: "Betadine Antiseptic 60ml", category: "Alat Kesehatan", price: 26000, stock: 15, expiry: "2029-01-10" },
+            { id: "MED-10", name: "Sangobion Kapsul", category: "Vitamin & Suplemen", price: 28000, stock: 18, expiry: "2027-09-25" },
+            { id: "MED-11", name: "Salep Kulit 88", category: "Obat Bebas", price: 9500, stock: 25, expiry: "2028-06-18" },
+            { id: "MED-12", name: "Decolgen Tablet", category: "Obat Bebas", price: 6000, stock: 40, expiry: "2026-11-20" }
+        ];
+
+        let medicines = JSON.parse(localStorage.getItem('apotek_medicines')) || DEFAULT_MEDICINES;
+        let transactions = JSON.parse(localStorage.getItem('apotek_transactions')) || [];
+        let cart = [];
+
+        function saveData() {
+            localStorage.setItem('apotek_medicines', JSON.stringify(medicines));
+            localStorage.setItem('apotek_transactions', JSON.stringify(transactions));
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('current-date-display').innerText = "Hari ini: " + new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            renderDashboard();
+            renderInventoryTable();
+            renderPosCatalog();
+        });
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+            document.getElementById(`nav-${tabId}`).classList.add('active');
+
+            if (tabId === 'dashboard') renderDashboard();
+            if (tabId === 'inventory') renderInventoryTable();
+            if (tabId === 'pos') renderPosCatalog();
+            if (tabId === 'history') renderHistoryTable();
+        }
+
+        function renderDashboard() {
+            document.getElementById('stat-total-medicines').innerText = medicines.length;
+            const lowStockItems = medicines.filter(m => m.stock <= 10);
+            document.getElementById('stat-low-stock').innerText = lowStockItems.length;
+
+            const todayStr = new Date().toISOString().split('T')[0];
+            const todayTxs = transactions.filter(t => t.date.startsWith(todayStr));
+            document.getElementById('stat-today-tx').innerText = todayTxs.length;
+
+            const todayRevenue = todayTxs.reduce((sum, t) => sum + t.total, 0);
+            document.getElementById('stat-today-revenue').innerText = `Rp ${todayRevenue.toLocaleString('id-ID')}`;
+
+            const lowStockBody = document.getElementById('dashboard-low-stock-body');
+            lowStockBody.innerHTML = lowStockItems.length ? lowStockItems.map(m => `
+                <tr>
+                    <td><b>${m.name}</b></td>
+                    <td><span class="badge badge-cat">${m.category}</span></td>
+                    <td style="text-align:right;" class="badge-warning">${m.stock}</td>
+                </tr>
+            `).join('') : `<tr><td colspan="3" style="text-align:center; color:#94a3b8;">Stok aman!</td></tr>`;
+
+            const recentTxBody = document.getElementById('dashboard-recent-tx-body');
+            const recentTxs = [...transactions].reverse().slice(0, 5);
+            recentTxBody.innerHTML = recentTxs.length ? recentTxs.map(t => `
+                <tr>
+                    <td><code>${t.id}</code></td>
+                    <td style="font-size:0.75rem; color:#64748b;">${t.time}</td>
+                    <td style="text-align:right; font-weight:bold; color:#047857;">Rp ${t.total.toLocaleString('id-ID')}</td>
+                </tr>
+            `).join('') : `<tr><td colspan="3" style="text-align:center; color:#94a3b8;">Belum ada transaksi</td></tr>`;
+        }
+
+        function renderInventoryTable() {
+            const search = document.getElementById('inv-search').value.toLowerCase();
+            const cat = document.getElementById('inv-filter-category').value;
+            const body = document.getElementById('inventory-table-body');
+
+            const filtered = medicines.filter(m => {
+                const matchName = m.name.toLowerCase().includes(search);
+                const matchCat = cat === 'ALL' || m.category === cat;
+                return matchName && matchCat;
+            });
+
+            body.innerHTML = filtered.length ? filtered.map(m => `
+                <tr>
+                    <td><b>${m.name}</b></td>
+                    <td><span class="badge badge-cat">${m.category}</span></td>
+                    <td>Rp ${m.price.toLocaleString('id-ID')}</td>
+                    <td><span class="${m.stock <= 10 ? 'badge badge-warning' : ''}">${m.stock}</span></td>
+                    <td style="font-size:0.75rem;">${m.expiry}</td>
+                    <td style="text-align:center;">
+                        <button onclick="editMedicine('${m.id}')" class="btn-edit btn-sm">Edit</button>
+                        <button onclick="deleteMedicine('${m.id}')" class="btn-danger btn-sm">Hapus</button>
+                    </td>
+                </tr>
+            `).join('') : `<tr><td colspan="6" style="text-align:center; color:#94a3b8;">Obat tidak ditemukan.</td></tr>`;
+        }
+
+        function openMedicineModal(med = null) {
+            document.getElementById('form-medicine').reset();
+            if (med) {
+                document.getElementById('modal-medicine-title').innerText = "Edit Data Obat";
+                document.getElementById('med-id').value = med.id;
+                document.getElementById('med-name').value = med.name;
+                document.getElementById('med-category').value = med.category;
+                document.getElementById('med-price').value = med.price;
+                document.getElementById('med-stock').value = med.stock;
+                document.getElementById('med-expiry').value = med.expiry;
+            } else {
+                document.getElementById('modal-medicine-title').innerText = "Tambah Obat Baru";
+                document.getElementById('med-id').value = "";
+            }
+            document.getElementById('medicine-modal').classList.add('active');
+        }
+
+        function closeMedicineModal() { document.getElementById('medicine-modal').classList.remove('active'); }
+
+        function saveMedicine(e) {
+            e.preventDefault();
+            const id = document.getElementById('med-id').value;
+            const name = document.getElementById('med-name').value;
+            const category = document.getElementById('med-category').value;
+            const price = parseInt(document.getElementById('med-price').value);
+            const stock = parseInt(document.getElementById('med-stock').value);
+            const expiry = document.getElementById('med-expiry').value;
+
+            if (id) {
+                const index = medicines.findIndex(m => m.id === id);
+                medicines[index] = { id, name, category, price, stock, expiry };
+            } else {
+                medicines.push({ id: `MED-${Date.now().toString().slice(-4)}`, name, category, price, stock, expiry });
+            }
+
+            saveData();
+            closeMedicineModal();
+            renderInventoryTable();
+        }
+
+        function editMedicine(id) {
+            const med = medicines.find(m => m.id === id);
+            if (med) openMedicineModal(med);
+        }
+
+        function deleteMedicine(id) {
+            if (confirm("Apakah kamu yakin ingin menghapus obat ini?")) {
+                medicines = medicines.filter(m => m.id !== id);
+                saveData();
+                renderInventoryTable();
+            }
+        }
+
+        function renderPosCatalog() {
+            const search = document.getElementById('pos-search').value.toLowerCase();
+            const grid = document.getElementById('pos-catalog-grid');
+            const filtered = medicines.filter(m => m.name.toLowerCase().includes(search));
+
+            grid.innerHTML = filtered.length ? filtered.map(m => `
+                <div onclick="addToCart('${m.id}')" class="catalog-item">
+                    <div>
+                        <span class="badge badge-cat" style="font-size:0.65rem;">${m.category}</span>
+                        <h4>${m.name}</h4>
+                    </div>
+                    <div>
+                        <div style="font-size:0.75rem; color:#64748b;">Stok: ${m.stock}</div>
+                        <div class="price">Rp ${m.price.toLocaleString('id-ID')}</div>
+                    </div>
+                </div>
+            `).join('') : `<div style="grid-column: 1/-1; text-align:center; color:#94a3b8; padding:20px;">Tidak ada obat.</div>`;
+        }
+
+        function addToCart(id) {
+            const med = medicines.find(m => m.id === id);
+            if (!med || med.stock <= 0) { alert("Stok obat ini sedang kosong!"); return; }
+
+            const cartItem = cart.find(c => c.id === id);
+            if (cartItem) {
+                if (cartItem.qty < med.stock) cartItem.qty++;
+                else alert("Mencapai batas stok!");
+            } else {
+                cart.push({ id: med.id, name: med.name, price: med.price, qty: 1, maxStock: med.stock });
+            }
+            renderCart();
+        }
+
+        function renderCart() {
+            const container = document.getElementById('cart-items-container');
+            if (cart.length === 0) {
+                container.innerHTML = `<p style="text-align:center; color:#94a3b8; padding:20px; font-size:0.8rem;">Keranjang kosong.</p>`;
+                document.getElementById('cart-subtotal').innerText = 'Rp 0';
+                document.getElementById('cart-total').innerText = 'Rp 0';
+                calculateChange();
+                return;
+            }
+
+            container.innerHTML = cart.map(item => `
+                <div class="cart-item">
+                    <div>
+                        <strong>${item.name}</strong><br>
+                        <span style="color:#64748b;">Rp ${item.price.toLocaleString('id-ID')}</span>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:5px;">
+                        <button onclick="updateQty('${item.id}', -1)" class="qty-btn">-</button>
+                        <span style="font-weight:bold;">${item.qty}</span>
+                        <button onclick="updateQty('${item.id}', 1)" class="qty-btn">+</button>
+                        <button onclick="removeFromCart('${item.id}')" style="background:none; border:none; color:#ef4444; margin-left:5px; cursor:pointer;">&times;</button>
+                    </div>
+                </div>
+            `).join('');
+
+            const total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            document.getElementById('cart-subtotal').innerText = `Rp ${total.toLocaleString('id-ID')}`;
+            document.getElementById('cart-total').innerText = `Rp ${total.toLocaleString('id-ID')}`;
+            calculateChange();
+        }
+
+        function updateQty(id, delta) {
+            const item = cart.find(c => c.id === id);
+            if (item) {
+                const newQty = item.qty + delta;
+                if (newQty > item.maxStock) { alert("Stok tidak mencukupi!"); return; }
+                if (newQty <= 0) removeFromCart(id);
+                else { item.qty = newQty; renderCart(); }
+            }
+        }
+
+        function removeFromCart(id) { cart = cart.filter(c => c.id !== id); renderCart(); }
+        function clearCart() { cart = []; renderCart(); }
+
+        function calculateChange() {
+            const total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            const payInput = parseInt(document.getElementById('pay-amount').value) || 0;
+            const change = payInput - total;
+
+            const changeEl = document.getElementById('pay-change');
+            if (change >= 0) {
+                changeEl.innerText = `Rp ${change.toLocaleString('id-ID')}`;
+                changeEl.style.color = "#047857";
+            } else {
+                changeEl.innerText = "Uang Kurang";
+                changeEl.style.color = "#ef4444";
+            }
+        }
+
+        function processTransaction() {
+            if (cart.length === 0) { alert("Keranjang masih kosong!"); return; }
+
+            const total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            const payAmount = parseInt(document.getElementById('pay-amount').value) || 0;
+
+            if (payAmount < total) { alert("Uang pembayaran kurang!"); return; }
+
+            cart.forEach(cartItem => {
+                const med = medicines.find(m => m.id === cartItem.id);
+                if (med) med.stock -= cartItem.qty;
+            });
+
+            const now = new Date();
+            const txRecord = {
+                id: `TRX-${Date.now().toString().slice(-6)}`,
+                date: now.toISOString().split('T')[0],
+                time: now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+                items: [...cart],
+                total: total,
+                pay: payAmount,
+                change: payAmount - total
+            };
+
+            transactions.push(txRecord);
+            saveData();
+            openReceiptModal(txRecord);
+
+            cart = [];
+            document.getElementById('pay-amount').value = '';
+            renderCart();
+            renderPosCatalog();
+        }
+
+        function openReceiptModal(tx) {
+            document.getElementById('rec-id').innerText = tx.id;
+            document.getElementById('rec-date').innerText = `${tx.date} ${tx.time}`;
+            
+            document.getElementById('rec-items').innerText = ''; // Reset
+            document.getElementById('rec-items').innerHTML = tx.items.map(i => `
+                <div style="display:flex; justify-content:space-between;">
+                    <span>${i.name} x${i.qty}</span>
+                    <span>Rp ${(i.price * i.qty).toLocaleString('id-ID')}</span>
+                </div>
+            `).join('');
+
+            document.getElementById('rec-total').innerText = `Rp ${tx.total.toLocaleString('id-ID')}`;
+            document.getElementById('rec-pay').innerText = `Rp ${tx.pay.toLocaleString('id-ID')}`;
+            document.getElementById('rec-change').innerText = `Rp ${tx.change.toLocaleString('id-ID')}`;
+
+            document.getElementById('receipt-modal').classList.add('active');
+        }
+
+        function closeReceiptModal() { document.getElementById('receipt-modal').classList.remove('active'); }
+
+        function renderHistoryTable() {
+            const body = document.getElementById('history-table-body');
+            const sorted = [...transactions].reverse();
+
+            body.innerHTML = sorted.length ? sorted.map(t => `
+                <tr>
+                    <td><code>${t.id}</code></td>
+                    <td style="font-size:0.75rem;">${t.date} ${t.time}</td>
+                    <td>${t.items.reduce((sum, i) => sum + i.qty, 0)} item</td>
+                    <td style="font-weight:bold; color:#047857;">Rp ${t.total.toLocaleString('id-ID')}</td>
+                    <td style="font-size:0.75rem;">Rp ${t.pay.toLocaleString('id-ID')}</td>
+                    <td style="font-size:0.75rem;">Rp ${t.change.toLocaleString('id-ID')}</td>
+                    <td style="text-align:center;">
+                        <button onclick='openReceiptModal(${JSON.stringify(t)})' class="btn-primary btn-sm">Struk</button>
+                    </td>
+                </tr>
+            `).join('') : `<tr><td colspan="7" style="text-align:center; color:#94a3b8;">Belum ada riwayat transaksi.</td></tr>`;
+        }
+    </script>
+</body>
+</html>
