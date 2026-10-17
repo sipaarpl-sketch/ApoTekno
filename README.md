@@ -1,0 +1,2 @@
+# ApoTekno
+Aplikasi penjualan obat
